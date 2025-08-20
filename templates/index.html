@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEPA Transfer BRL - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-money-bill-transfer"></i>
+                SEPA Transfer BRL
+            </div>
+            <div class="nav-menu">
+                <a href="#dashboard" class="nav-link active">Dashboard</a>
+                <a href="#accounts" class="nav-link">Contas</a>
+                <a href="#transfers" class="nav-link">Transferências</a>
+                <a href="#history" class="nav-link">Histórico</a>
+                <div class="nav-user">
+                    <span id="user-name">Usuário</span>
+                    <button id="logout-btn" class="btn-secondary">Sair</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section active">
+            <div class="container">
+                <h1>Dashboard</h1>
+                
+                <div class="dashboard-grid">
+                    <div class="card balance-card">
+                        <div class="card-header">
+                            <h3>Saldo Total</h3>
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="balance-amount" id="total-balance">R$ 0,00</div>
+                            <div class="balance-accounts" id="account-count">0 contas</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Transferências Hoje</h3>
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number" id="today-transfers">0</div>
+                            <div class="stat-amount" id="today-amount">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Transferências Pendentes</h3>
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number" id="pending-transfers">0</div>
+                            <div class="stat-amount" id="pending-amount">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h2>Ações Rápidas</h2>
+                    <div class="action-buttons">
+                        <button class="btn-primary" onclick="showSection('transfers')">
+                            <i class="fas fa-paper-plane"></i>
+                            Nova Transferência
+                        </button>
+                        <button class="btn-secondary" onclick="showSection('accounts')">
+                            <i class="fas fa-plus"></i>
+                            Nova Conta
+                        </button>
+                        <button class="btn-secondary" onclick="generateQRCode()">
+                            <i class="fas fa-qrcode"></i>
+                            Gerar QR Code
+                        </button>
+                    </div>
+                </div>
+
+                <div class="recent-transactions">
+                    <h2>Transações Recentes</h2>
+                    <div class="transaction-list" id="recent-transactions">
+                        <!-- Transactions will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accounts Section -->
+        <section id="accounts-section" class="content-section">
+            <div class="container">
+                <h1>Minhas Contas</h1>
+                
+                <div class="section-actions">
+                    <button class="btn-primary" onclick="showCreateAccountForm()">
+                        <i class="fas fa-plus"></i>
+                        Nova Conta
+                    </button>
+                </div>
+
+                <div class="accounts-grid" id="accounts-list">
+                    <!-- Accounts will be loaded here -->
+                </div>
+
+                <!-- Create Account Modal -->
+                <div id="create-account-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Nova Conta</h3>
+                            <span class="close" onclick="closeModal('create-account-modal')">&times;</span>
+                        </div>
+                        <form id="create-account-form">
+                            <div class="form-group">
+                                <label for="account-type">Tipo de Conta</label>
+                                <select id="account-type" required>
+                                    <option value="">Selecione</option>
+                                    <option value="checking">Conta Corrente</option>
+                                    <option value="savings">Poupança</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="bank-code">Código do Banco</label>
+                                <input type="text" id="bank-code" maxlength="3" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="branch-code">Código da Agência</label>
+                                <input type="text" id="branch-code" maxlength="4" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pix-key">Chave PIX (opcional)</label>
+                                <input type="text" id="pix-key">
+                            </div>
+                            <div class="form-group">
+                                <label for="pix-key-type">Tipo da Chave PIX</label>
+                                <select id="pix-key-type">
+                                    <option value="">Selecione</option>
+                                    <option value="cpf">CPF</option>
+                                    <option value="email">Email</option>
+                                    <option value="phone">Telefone</option>
+                                    <option value="random">Aleatória</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="closeModal('create-account-modal')">Cancelar</button>
+                                <button type="submit" class="btn-primary">Criar Conta</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transfers Section -->
+        <section id="transfers-section" class="content-section">
+            <div class="container">
+                <h1>Nova Transferência</h1>
+                
+                <form id="transfer-form" class="transfer-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="sender-account">Conta de Origem</label>
+                            <select id="sender-account" required>
+                                <option value="">Selecione uma conta</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="transfer-amount">Valor</label>
+                            <input type="text" id="transfer-amount" placeholder="R$ 0,00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transfer-type">Tipo de Transferência</label>
+                        <select id="transfer-type" required>
+                            <option value="">Selecione</option>
+                            <option value="internal">Transferência Interna</option>
+                            <option value="pix">PIX</option>
+                            <option value="external">Transferência Externa</option>
+                        </select>
+                    </div>
+
+                    <!-- Internal Transfer -->
+                    <div id="internal-transfer-fields" class="transfer-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="receiver-account">Conta de Destino</label>
+                            <select id="receiver-account">
+                                <option value="">Selecione uma conta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- PIX Transfer -->
+                    <div id="pix-transfer-fields" class="transfer-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="pix-key-input">Chave PIX</label>
+                            <input type="text" id="pix-key-input" placeholder="CPF, Email, Telefone ou Chave Aleatória">
+                        </div>
+                    </div>
+
+                    <!-- External Transfer -->
+                    <div id="external-transfer-fields" class="transfer-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recipient-name">Nome do Destinatário</label>
+                                <input type="text" id="recipient-name">
+                            </div>
+                            <div class="form-group">
+                                <label for="recipient-document">CPF/CNPJ</label>
+                                <input type="text" id="recipient-document">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="recipient-bank">Banco</label>
+                                <input type="text" id="recipient-bank">
+                            </div>
+                            <div class="form-group">
+                                <label for="recipient-account">Conta</label>
+                                <input type="text" id="recipient-account">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transfer-description">Descrição (opcional)</label>
+                        <textarea id="transfer-description" rows="3" placeholder="Descrição da transferência"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="clearTransferForm()">Limpar</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Realizar Transferência
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history-section" class="content-section">
+            <div class="container">
+                <h1>Histórico de Transações</h1>
+                
+                <div class="filters">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filter-status">Status</label>
+                            <select id="filter-status">
+                                <option value="">Todos</option>
+                                <option value="completed">Concluída</option>
+                                <option value="pending">Pendente</option>
+                                <option value="failed">Falhou</option>
+                                <option value="cancelled">Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-start-date">Data Inicial</label>
+                            <input type="date" id="filter-start-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-end-date">Data Final</label>
+                            <input type="date" id="filter-end-date">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn-primary" onclick="filterTransactions()">Filtrar</button>
+                            <button class="btn-secondary" onclick="exportTransactions()">Exportar CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transaction-history" id="transaction-history">
+                    <!-- Transaction history will be loaded here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>QR Code PIX</h3>
+                <span class="close" onclick="closeModal('qr-modal')">&times;</span>
+            </div>
+            <div class="qr-content">
+                <div id="qr-code-container"></div>
+                <p>Compartilhe este QR Code para receber transferências PIX</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal active">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Login</h3>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary full-width">Entrar</button>
+                </div>
+                <div class="form-footer">
+                    <p>Não tem conta? <a href="#" onclick="showRegisterForm()">Registre-se</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Registro</h3>
+                <span class="close" onclick="showLoginForm()">&times;</span>
+            </div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-username">Nome de Usuário</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-fullname">Nome Completo</label>
+                    <input type="text" id="register-fullname" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-cpf">CPF</label>
+                    <input type="text" id="register-cpf" placeholder="000.000.000-00">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Senha</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary full-width">Registrar</button>
+                </div>
+                <div class="form-footer">
+                    <p>Já tem conta? <a href="#" onclick="showLoginForm()">Faça login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
